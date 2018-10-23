@@ -4,10 +4,10 @@ Distributed Tensorflow 0.12.0 example of using data parallelism and share model 
 Change the hardcoded host urls below with your own hosts.
 Run like this:
 
-pc-01$ python example.py --job_name="ps" --task_index=0
-pc-02$ python example.py --job_name="worker" --task_index=0
-pc-03$ python example.py --job_name="worker" --task_index=1
-pc-04$ python example.py --job_name="worker" --task_index=2
+pc-01$ python dnn_train_aws_sync_gpu.py --job_name="ps" --task_index=0
+pc-02$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=0
+pc-03$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=1
+pc-04$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=2
 '''
 
 from __future__ import print_function
@@ -20,8 +20,8 @@ import subprocess
 
 # cluster specification
 parameter_servers = ["184.73.143.240:2222"]
-workers = [":2223",
-           ":2223"]
+workers = ["54.86.104.96:2223",
+           "54.174.17.83:2223"]
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
 # input flags
