@@ -19,16 +19,17 @@ import time
 import subprocess
 
 # cluster specification
-parameter_servers = ["184.73.143.240:2222"]
-workers = ["54.86.104.96:2223",
-           "54.174.17.83:2223"]
+parameter_servers = ["18.208.152.12:2222",
+                     "34.238.155.155:2222"]
+workers = ["18.208.152.12:2223",
+           "34.238.155.155:2223"]
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
 # input flags
 tf.app.flags.DEFINE_string("job_name", "", "Either 'ps' or 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 tf.app.flags.DEFINE_boolean("sparse_input", False, "Whether we handle sparse input specially")
-tf.app.flags.DEFINE_integer("hidden_layer_size", 1000, "The size of the middle hidden layer")
+tf.app.flags.DEFINE_integer("hidden_layer_size", 10000, "The size of the middle hidden layer")
 FLAGS = tf.app.flags.FLAGS
 
 # start a server for a specific task
@@ -37,8 +38,8 @@ server = tf.train.Server(cluster,
                         task_index=FLAGS.task_index)
 
 # config
-num_examples = 500#4856383
-batch_size = 100//len(workers)
+num_examples = 4856383
+batch_size = 10000//len(workers)
 learning_rate = 0.00000001
 training_epochs = 1
 evaluation_batch_size = 100
