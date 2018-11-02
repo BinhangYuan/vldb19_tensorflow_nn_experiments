@@ -19,13 +19,10 @@ import time
 import subprocess
 
 # cluster specification
-parameter_servers = ["18.232.77.43:2222"] # this should be a CPU parameter server.
-workers = ["34.204.100.191:2223", # these should be GPU workers.
-           "18.234.120.225:2223",
-           "100.24.29.72:2223",
-           "52.200.194.112:2223",
-           "18.234.40.166:2223",
-           "54.208.230.237:2223"]
+parameter_servers = ["54.227.146.161:2222",
+                     "54.89.105.63:2222"] # this should be a CPU parameter server.
+workers = ["35.170.245.196:2223", # these should be GPU workers.
+           "18.234.120.225:2223"]
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
 # input flags
