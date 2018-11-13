@@ -160,12 +160,9 @@ elif FLAGS.job_name == "worker":
         # model parameters will change during training so we use tf.Variable
         tf.set_random_seed(1)
         with tf.name_scope("weights"):
-            W1 = tf.get_variable("W1", [D1, D2], initializer=tf.random_normal_initializer(),
-                                partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
-            W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer(),
-                                partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
-            W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer(),
-                                partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
+            W1 = tf.get_variable("W1", [D1, D2], initializer=tf.random_normal_initializer())
+            W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer())
+            W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer())
 
         # bias
         with tf.name_scope("biases"):
