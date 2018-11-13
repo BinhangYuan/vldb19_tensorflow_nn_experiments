@@ -19,10 +19,11 @@ import time
 import subprocess
 
 # cluster specification
-parameter_servers = ["54.227.146.161:2222",
-                     "54.89.105.63:2222"] # this should be a CPU parameter server.
-workers = ["35.170.245.196:2223", # these should be GPU workers.
-           "18.234.120.225:2223"]
+parameter_servers = ["100.26.112.81:2222"] # this should be a CPU parameter server.
+workers = ["18.207.223.201:2223",
+           "35.171.163.139:2223",
+           "54.172.211.47:2223"
+           ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
 # input flags
@@ -33,9 +34,7 @@ tf.app.flags.DEFINE_integer("hidden_layer_size", 10000, "The size of the middle 
 FLAGS = tf.app.flags.FLAGS
 
 # start a server for a specific task
-server = tf.train.Server(cluster,
-                        job_name=FLAGS.job_name,
-                        task_index=FLAGS.task_index)
+server = tf.train.Server(cluster,job_name=FLAGS.job_name,task_index=FLAGS.task_index)
 
 # config
 num_examples = 4856383
@@ -143,10 +142,7 @@ elif FLAGS.job_name == "worker":
         worker_device="/job:worker/task:%d" % FLAGS.task_index,
         cluster=cluster)):
 
-        # count the number of updates
-        global_step = tf.get_variable('global_step', [],
-                                    initializer = tf.constant_initializer(0),
-                                    trainable = False)
+        global_step = tf.train.get_or_create_global_step()
 
         # input images
         with tf.name_scope('input'):
@@ -207,7 +203,6 @@ elif FLAGS.job_name == "worker":
 
         # specify optimizer
         with tf.name_scope('train'):
-            # optimizer is an "operation" which we can execute in a session
             grad_op = tf.train.GradientDescentOptimizer(learning_rate)
 
             rep_op = tf.train.SyncReplicasOptimizer(grad_op,
@@ -233,41 +228,32 @@ elif FLAGS.job_name == "worker":
         print("Variables initialized ...")
         # saver = tf.train.Saver(max_to_keep=20, keep_checkpoint_every_n_hours=1.0)
 
-    sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                            global_step=global_step,
-                            init_op=init_op)
+    hooks = [tf.train.StopAtStepHook(last_step=1000000)]
 
-    with sv.prepare_or_wait_for_session(server.target) as sess:
-        # is chief
-        if FLAGS.task_index == 0:
-            sv.start_queue_runners(sess, [chief_queue_runner])
-            sess.run(init_token_op)
-            print("init_token_op is done!")
+    with tf.train.MonitoredTrainingSession(master=server.target,
+                            is_chief=(FLAGS.task_index == 0),
+                            hooks=hooks) as sess:
 
-        # create log writer object (this will log on every machine)
-        writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
+        while not sess.should_stop():
 
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-        # perform training cycles
-        begin_time = time.time()
-        hour = 0
-        frequency = min(1, int(num_examples/batch_size))
-        start_time = time.time()
 
-        for epoch in range(training_epochs):
-            # number of batches in one epoch batch_count = int(num_examples/batch_size)
-            batch_count = min(20,int(num_examples/batch_size))
-            count = 0
-            for i in range(batch_count):
-                # perform the operations we defined earlier on batch
-                print("A training iteration begins!")
-                _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
-                writer.add_summary(summary, step)
-                print("A trainning iteration ends!")
-                count += 1
-                if count % frequency == 0 or i+1 == batch_count:
+            # perform training cycles
+            begin_time = time.time()
+            hour = 0
+            frequency = min(1, int(num_examples/batch_size))
+            start_time = time.time()
+
+            for epoch in range(training_epochs):
+                # number of batches in one epoch batch_count = int(num_examples/batch_size)
+                batch_count = min(20,int(num_examples/batch_size))
+                count = 0
+                for i in range(batch_count):
+                    # perform the operations we defined earlier on batch
+                    print("A training iteration begins!")
+                    _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
+                    print("A trainning iteration ends!")
+                    count += 1
                     elapsed_time = time.time() - start_time
                     start_time = time.time()
                     print("Step: %d," % (step+1),
@@ -278,8 +264,4 @@ elif FLAGS.job_name == "worker":
                     count = 0
                     begin_time = time.time()
 
-        coord.request_stop()
-        coord.join(threads, stop_grace_period_secs=5)
-
-    sv.stop()
-    print("done")
+        print("done")
