@@ -164,20 +164,12 @@ elif FLAGS.job_name == "worker":
 
         global_step = tf.train.get_or_create_global_step()
 
-
-
-        # input images
+        dataset = input_pipeline(['./wiki_data/Wikipedia_tf_60k.csv'], batch_size)
+        iterator = dataset.make_one_shot_iterator()
+        # input textfiles
         with tf.name_scope('input'):
-            if FLAGS.sparse_input:
-                x, y_ = sparse_input_pipeline(['./wiki_data/Wikipedia_60k.tfrecords'], batch_size)
-                eval_x = tf.sparse_placeholder(tf.float32)
-                eval_y_ = tf.placeholder(tf.int32, shape=[], name="eval_y_")
-            else:
-                dataset =  input_pipeline(['./wiki_data/Wikipedia_tf_60k.csv'], batch_size)
-                iterator = dataset.make_one_shot_iterator()
-                x, y_ = iterator.get_next()
-                eval_x = tf.placeholder(tf.float32, shape=[evaluation_batch_size, D1], name="eval_x")
-                eval_y_ = tf.placeholder(tf.int64, shape=[evaluation_batch_size], name="eval_y_")
+            x = tf.placeholder(tf.float32, shape=[batch_size, D1], name="x")
+            y_ = tf.placeholder(tf.int64, shape=[batch_size], name="y_")
 
         # model parameters will change during training so we use tf.Variable
         tf.set_random_seed(1)
@@ -195,30 +187,17 @@ elif FLAGS.job_name == "worker":
         # implement model
         with tf.name_scope("softmax"):
             # y is our prediction
-            if FLAGS.sparse_input:
-                z2 = tf.add(tf.sparse_tensor_dense_matmul(tf.cast(x,tf.float32),W1),b1)
-            else:
-                z2 = tf.add(tf.matmul(x,W1,a_is_sparse=False),b1)
+            z2 = tf.add(tf.matmul(x,W1,a_is_sparse=False),b1)
             a2 = tf.nn.relu(z2)
             z3 = tf.add(tf.matmul(a2,W2),b2)
             a3 = tf.nn.relu(z3)
             z4 = tf.add(tf.matmul(a3,W3),b3)
             y  = tf.nn.log_softmax(z4)
-            if FLAGS.sparse_input:
-                eval_z2 = tf.add(tf.sparse_tensor_dense_matmul(eval_x,W1),b1)
-            else:
-                eval_z2 = tf.add(tf.matmul(eval_x,W1),b1)
-            eval_a2 = tf.nn.relu(eval_z2)
-            eval_z3 = tf.add(tf.matmul(eval_a2,W2),b2)
-            eval_a3 = tf.nn.relu(eval_z3)
-            eval_z4 = tf.add(tf.matmul(eval_a3,W3),b3)
-            eval_y  = tf.nn.log_softmax(eval_z4)
 
         # specify cost function
         with tf.name_scope('cross_entropy'):
             # this is our cost
             cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * y, axis=[1]))
-            eval_cross_entropy = tf.reduce_mean(-tf.reduce_sum(tf.one_hot(eval_y_, C, axis=-1) * eval_y, axis=[1]))
 
         # specify optimizer
         with tf.name_scope('train'):
@@ -241,30 +220,16 @@ elif FLAGS.job_name == "worker":
         init_token_op = rep_op.get_init_tokens_op()
         chief_queue_runner = rep_op.get_chief_queue_runner()
 
-
-        with tf.name_scope('Accuracy'):
-            # accuracy
-            correct_prediction = tf.equal(tf.argmax(eval_y,1), eval_y_)
-            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            confusion_matrix = tf.contrib.metrics.confusion_matrix(eval_y_, tf.argmax(eval_y,1))
-            mse = tf.losses.mean_squared_error(eval_y_, tf.argmax(eval_y,1))
-
         # merge all summaries into a single "operation" which we can execute in a session
         summary_op = tf.summary.merge_all()
         init_op = tf.global_variables_initializer()
         print("Variables initialized ...")
-        # saver = tf.train.Saver(max_to_keep=20, keep_checkpoint_every_n_hours=1.0)
-
-
 
         with tf.train.MonitoredTrainingSession(master=server.target,
                             is_chief=(FLAGS.task_index == 0),
                             hooks=hooks) as sess:
 
             while not sess.should_stop():
-
-
-
                 # perform training cycles
                 begin_time = time.time()
                 frequency = min(1, int(num_examples/batch_size))
@@ -277,7 +242,8 @@ elif FLAGS.job_name == "worker":
                     for i in range(batch_count):
                         # perform the operations we defined earlier on batch
                         print("A training iteration begins!")
-                        _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
+                        train_x, train_y = iterator.get_next()
+                        _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step], feed_dict={x:train_x, y_:train_y})
                         print("A trainning iteration ends!")
                         count += 1
                         elapsed_time = time.time() - start_time
