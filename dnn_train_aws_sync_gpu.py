@@ -165,7 +165,8 @@ elif FLAGS.job_name == "worker":
                     for i in range(batch_count):
                         # perform the operations we defined earlier on batch
                         print("A training iteration begins!")
-                        _, summary, step = sess.run([train_op, summary_op, global_step])
+                        #_, summary, step = sess.run([train_op, summary_op, global_step])
+                        step = sess.run([global_step])
                         print("A trainning iteration ends!")
                         elapsed_time = time.time() - start_time
                         start_time = time.time()
