@@ -168,8 +168,7 @@ elif FLAGS.job_name == "worker":
         iterator = dataset.make_one_shot_iterator()
         # input textfiles
         with tf.name_scope('input'):
-            x = tf.placeholder(tf.float32, shape=[batch_size, D1], name="x")
-            y_ = tf.placeholder(tf.float32, shape=[batch_size, C], name="y_")
+            x , y_ = iterator.get_next()
 
         # model parameters will change during training so we use tf.Variable
         tf.set_random_seed(1)
@@ -242,8 +241,7 @@ elif FLAGS.job_name == "worker":
                     for i in range(batch_count):
                         # perform the operations we defined earlier on batch
                         print("A training iteration begins!")
-                        train_x, train_y = iterator.get_next()
-                        _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step], feed_dict={x:train_x, y_:train_y})
+                        _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
                         print("A trainning iteration ends!")
                         count += 1
                         elapsed_time = time.time() - start_time
