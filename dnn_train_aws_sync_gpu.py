@@ -4,10 +4,10 @@ Distributed Tensorflow 0.12.0 example of using data parallelism and share model 
 Change the hardcoded host urls below with your own hosts.
 Run like this:
 
-pc-01$ python dnn_train_aws_sync_gpu.py --job_name="ps" --task_index=0
-pc-02$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=0
-pc-03$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=1
-pc-04$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=2
+pc-01$ python dnn_train_aws_sync_gpu.py --job_name="ps" --task_index=0 --hidden_layer_size=10000
+pc-02$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=0 --hidden_layer_size=10000
+pc-03$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=1 --hidden_layer_size=10000
+pc-04$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=2 --hidden_layer_size=10000
 '''
 
 from __future__ import print_function
@@ -19,10 +19,10 @@ import time
 import subprocess
 
 # cluster specification
-parameter_servers = ["100.26.112.81:2222"] # this should be a CPU parameter server.
-workers = ["18.207.223.201:2223",
-           "35.171.163.139:2223",
-           "54.172.211.47:2223"
+parameter_servers = ["100.27.24.224:2222"] # this should be a CPU parameter server.
+workers = ["54.210.144.49:2223",
+           "100.27.25.125:2223",
+           "34.238.154.250:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -115,6 +115,26 @@ def input_pipeline(filenames, batch_size, num_epochs=None):
     return example_batch, label_batch
 
 
+
+
+def input_pipeline(filenames, batch_size, num_epochs=None):
+    dataset = tf.data.Dataset.from_tensor_slices(filenames)
+
+    def parse_wiki_format(record_string):
+        record_list = tf.py_func(preprocess_wiki, [record_string], [tf.float32, tf.int64])
+        return tf.reshape(record_list[0], [D1]), tf.one_hot(tf.reshape(record_list[1], []), C)
+
+    dataset = dataset.flat_map(
+        lambda filename: (
+            tf.data.TextLineDataset(filename)
+            .map(parse_wiki_format)))
+
+    dataset = dataset.shuffle(buffer_size=100000)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.repeat(num_epochs)
+    return dataset
+
+
 def sparse_input_pipeline(filenames, batch_size, num_epochs=None):
     filename_queue = tf.train.string_input_producer(
         filenames, num_epochs=num_epochs, shuffle=True)
@@ -144,16 +164,18 @@ elif FLAGS.job_name == "worker":
 
         global_step = tf.train.get_or_create_global_step()
 
+
+
         # input images
         with tf.name_scope('input'):
             if FLAGS.sparse_input:
                 x, y_ = sparse_input_pipeline(['./wiki_data/Wikipedia_60k.tfrecords'], batch_size)
-            else:
-                x, y_ = input_pipeline(['./wiki_data/Wikipedia_tf_60k.csv'], batch_size)
-            if FLAGS.sparse_input:
                 eval_x = tf.sparse_placeholder(tf.float32)
                 eval_y_ = tf.placeholder(tf.int32, shape=[], name="eval_y_")
             else:
+                dataset =  input_pipeline(['./wiki_data/Wikipedia_tf_60k.csv'], batch_size)
+                iterator = dataset.make_one_shot_iterator()
+                x, y_ = iterator.get_next()
                 eval_x = tf.placeholder(tf.float32, shape=[evaluation_batch_size, D1], name="eval_x")
                 eval_y_ = tf.placeholder(tf.int64, shape=[evaluation_batch_size], name="eval_y_")
 
