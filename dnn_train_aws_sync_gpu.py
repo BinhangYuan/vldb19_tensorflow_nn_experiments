@@ -147,17 +147,15 @@ elif FLAGS.job_name == "worker":
         chief_queue_runner = rep_op.get_chief_queue_runner()
 
         # merge all summaries into a single "operation" which we can execute in a session
+        saver = tf.train.Saver()
         summary_op = tf.summary.merge_all()
         init_op = tf.global_variables_initializer()
         print("Model initialized ...")
 
         with tf.train.MonitoredTrainingSession(master=server.target,
                             is_chief=(FLAGS.task_index == 0),
+                            scaffold=tf.train.Scaffold(init_op=init_op, summary_op=summary_op, saver=saver),
                             hooks=hooks) as sess:
-
-            if FLAGS.task_index == 0:
-                sess.run(init_token_op)
-                print("init_token_op is done!")
 
             while not sess.should_stop():
                 # perform training cycles
