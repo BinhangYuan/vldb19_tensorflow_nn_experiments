@@ -19,10 +19,10 @@ import time
 import subprocess
 
 # cluster specification
-parameter_servers = ["100.27.24.224:2222"] # this should be a CPU parameter server.
-workers = ["54.210.144.49:2223",
-           "100.27.25.125:2223",
-           "34.238.154.250:2223"
+parameter_servers = ["34.205.156.121:2222"] # this should be a CPU parameter server.
+workers = ["54.165.180.127:2223",
+           "18.234.78.218:2223",
+           "52.91.28.153:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -52,35 +52,6 @@ num_ps_replicas = len(parameter_servers)
 num_workers = len(workers)
 
 
-
-def read_my_file_format(filename_queue):
-    reader = tf.TextLineReader()
-    _, record_string = reader.read(filename_queue)
-    record_defaults = [[0.0]] * D1
-    record_defaults.append([0])
-    record_list = tf.decode_csv(record_string, record_defaults)
-    return tf.stack(record_list[0:D1]), tf.one_hot(record_list[D1], C)
-
-
-def preprocessLR(line):
-    splits = line.encode().split('|')
-    text = splits[1][1:-1].split(',')
-    point = np.empty(len(text))
-    for i in range(len(text)):
-        if (text[i] is None) or (not text[i].strip()) or (text[i].find('e') != text[i].rfind('e')):
-            point[i] = 0.0
-        else:
-            point[i] = float(text[i])
-    return point.astype(np.float32), int(splits[2])
-
-
-def read_simsql_file_format(filename_queue):
-    reader = tf.TextLineReader()
-    _, record_string = reader.read(filename_queue)
-    record_list = tf.py_func(preprocessLR, [record_string], [tf.float32, tf.int64])
-    return tf.reshape(record_list[0], [D1]), tf.one_hot(tf.reshape(record_list[1], []), C)
-
-
 def preprocess_wiki(line):
     splits = line.decode('utf-8').split(',')
     doc = np.zeros(D1)
@@ -88,33 +59,6 @@ def preprocess_wiki(line):
     for i in range(wordcount):
         doc[int(splits[2 * i + 2])] = float(splits[2 * i + 3])
     return doc.astype(np.float32), int(splits[1])
-
-
-def read_wiki_file_format(filename_queue):
-    reader = tf.TextLineReader()
-    _, record_string = reader.read(filename_queue)
-    record_list = tf.py_func(preprocess_wiki, [record_string], [tf.float32, tf.int64])
-    return tf.reshape(record_list[0], [D1]), tf.one_hot(tf.reshape(record_list[1], []), C)
-
-
-def input_pipeline(filenames, batch_size, num_epochs=None):
-    filename_queue = tf.train.string_input_producer(
-        filenames, num_epochs=num_epochs, shuffle=True)
-    example, label = read_wiki_file_format(filename_queue)
-    # min_after_dequeue defines how big a buffer we will randomly sample
-    #   from -- bigger means better shuffling but slower start up and more
-    #   memory used.
-    # capacity must be larger than min_after_dequeue and the amount larger
-    #   determines the maximum we will prefetch.  Recommendation:
-    #   min_after_dequeue + (num_threads + a small safety margin) * batch_size
-    min_after_dequeue = 10000
-    capacity = min_after_dequeue + 3 * batch_size
-    example_batch, label_batch = tf.train.shuffle_batch(
-        [example, label], batch_size=batch_size, capacity=capacity,
-        min_after_dequeue=min_after_dequeue)
-    return example_batch, label_batch
-
-
 
 
 def input_pipeline(filenames, batch_size, num_epochs=None):
@@ -129,28 +73,11 @@ def input_pipeline(filenames, batch_size, num_epochs=None):
             tf.data.TextLineDataset(filename)
             .map(parse_wiki_format)))
 
-    dataset = dataset.shuffle(buffer_size=100000)
+    dataset = dataset.shuffle(buffer_size=10000)
     dataset = dataset.batch(batch_size)
     dataset = dataset.repeat(num_epochs)
     return dataset
 
-
-def sparse_input_pipeline(filenames, batch_size, num_epochs=None):
-    filename_queue = tf.train.string_input_producer(
-        filenames, num_epochs=num_epochs, shuffle=True)
-    reader  = tf.TFRecordReader()
-    _, serialized_example = reader.read(filename_queue)
-    min_after_dequeue = 10000
-    capacity = min_after_dequeue + 3 * batch_size
-    batch_serialized_examples = tf.train.shuffle_batch(
-        [serialized_example], batch_size=batch_size, capacity=capacity,
-        min_after_dequeue=min_after_dequeue)
-    feature_to_type = {
-        'label': tf.FixedLenFeature([], dtype=tf.int64),
-        'example': tf.SparseFeature(index_key='index', value_key='value', dtype=tf.int64, size=D1, already_sorted=True)
-    }
-    features = tf.parse_example(batch_serialized_examples, feature_to_type)
-    return features['example'], tf.one_hot(features['label'], C, axis=-1)
 
 
 if FLAGS.job_name == "ps":
@@ -186,7 +113,7 @@ elif FLAGS.job_name == "worker":
         # implement model
         with tf.name_scope("softmax"):
             # y is our prediction
-            z2 = tf.add(tf.matmul(x,W1,a_is_sparse=False),b1)
+            z2 = tf.add(tf.matmul(x,W1),b1)
             a2 = tf.nn.relu(z2)
             z3 = tf.add(tf.matmul(a2,W2),b2)
             a3 = tf.nn.relu(z3)
@@ -222,11 +149,15 @@ elif FLAGS.job_name == "worker":
         # merge all summaries into a single "operation" which we can execute in a session
         summary_op = tf.summary.merge_all()
         init_op = tf.global_variables_initializer()
-        print("Variables initialized ...")
+        print("Model initialized ...")
 
         with tf.train.MonitoredTrainingSession(master=server.target,
                             is_chief=(FLAGS.task_index == 0),
                             hooks=hooks) as sess:
+
+            if FLAGS.task_index == 0:
+                sess.run(init_token_op)
+                print("init_token_op is done!")
 
             while not sess.should_stop():
                 # perform training cycles
