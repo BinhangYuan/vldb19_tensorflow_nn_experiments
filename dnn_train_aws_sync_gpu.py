@@ -169,7 +169,7 @@ elif FLAGS.job_name == "worker":
         # input textfiles
         with tf.name_scope('input'):
             x = tf.placeholder(tf.float32, shape=[batch_size, D1], name="x")
-            y_ = tf.placeholder(tf.float32, shape=[batch_size], name="y_")
+            y_ = tf.placeholder(tf.float32, shape=[batch_size, C], name="y_")
 
         # model parameters will change during training so we use tf.Variable
         tf.set_random_seed(1)
