@@ -222,13 +222,21 @@ elif FLAGS.job_name == "worker":
 
         # specify optimizer
         with tf.name_scope('train'):
+            hooks = [tf.train.StopAtStepHook(last_step=1000000)]
+
             grad_op = tf.train.GradientDescentOptimizer(learning_rate)
 
             rep_op = tf.train.SyncReplicasOptimizer(grad_op,
                                                     replicas_to_aggregate=len(workers),
                                                     total_num_replicas=len(workers),
                                                     use_locking=True)
+
+            sync_replicas_hook = rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0))
+
+            hooks.append(sync_replicas_hook)
+
             train_op = rep_op.minimize(cross_entropy, global_step=global_step)
+
 
         init_token_op = rep_op.get_init_tokens_op()
         chief_queue_runner = rep_op.get_chief_queue_runner()
@@ -247,40 +255,39 @@ elif FLAGS.job_name == "worker":
         print("Variables initialized ...")
         # saver = tf.train.Saver(max_to_keep=20, keep_checkpoint_every_n_hours=1.0)
 
-    hooks = [tf.train.StopAtStepHook(last_step=1000000)]
 
-    with tf.train.MonitoredTrainingSession(master=server.target,
+
+        with tf.train.MonitoredTrainingSession(master=server.target,
                             is_chief=(FLAGS.task_index == 0),
                             hooks=hooks) as sess:
 
-        while not sess.should_stop():
+            while not sess.should_stop():
 
 
 
-            # perform training cycles
-            begin_time = time.time()
-            hour = 0
-            frequency = min(1, int(num_examples/batch_size))
-            start_time = time.time()
+                # perform training cycles
+                begin_time = time.time()
+                frequency = min(1, int(num_examples/batch_size))
+                start_time = time.time()
 
-            for epoch in range(training_epochs):
-                # number of batches in one epoch batch_count = int(num_examples/batch_size)
-                batch_count = min(20,int(num_examples/batch_size))
-                count = 0
-                for i in range(batch_count):
-                    # perform the operations we defined earlier on batch
-                    print("A training iteration begins!")
-                    _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
-                    print("A trainning iteration ends!")
-                    count += 1
-                    elapsed_time = time.time() - start_time
-                    start_time = time.time()
-                    print("Step: %d," % (step+1),
-                          " Epoch: %2d," % (epoch+1),
-                          " Batch: %3d of %3d," % (i+1, batch_count),
-                          " Cost: %.4f," % cost,
-                          " AvgTime: %3.2fms" % float(elapsed_time*1000/frequency))
+                for epoch in range(training_epochs):
+                    # number of batches in one epoch batch_count = int(num_examples/batch_size)
+                    batch_count = min(20,int(num_examples/batch_size))
                     count = 0
-                    begin_time = time.time()
+                    for i in range(batch_count):
+                        # perform the operations we defined earlier on batch
+                        print("A training iteration begins!")
+                        _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
+                        print("A trainning iteration ends!")
+                        count += 1
+                        elapsed_time = time.time() - start_time
+                        start_time = time.time()
+                        print("Step: %d," % (step+1),
+                              " Epoch: %2d," % (epoch+1),
+                              " Batch: %3d of %3d," % (i+1, batch_count),
+                              " Cost: %.4f," % cost,
+                              " AvgTime: %3.2fms" % float(elapsed_time*1000/frequency))
+                        count = 0
+                        begin_time = time.time()
 
-        print("done")
+            print("done")
