@@ -136,9 +136,7 @@ elif FLAGS.job_name == "worker":
                                                     total_num_replicas=len(workers),
                                                     use_locking=True)
 
-            sync_replicas_hook = rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0))
-
-            hooks.append(sync_replicas_hook)
+            hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0)))
 
             train_op = rep_op.minimize(cross_entropy, global_step=global_step)
 
@@ -159,28 +157,21 @@ elif FLAGS.job_name == "worker":
 
             while not sess.should_stop():
                 # perform training cycles
-                begin_time = time.time()
-                frequency = min(1, int(num_examples/batch_size))
                 start_time = time.time()
 
                 for epoch in range(training_epochs):
                     # number of batches in one epoch batch_count = int(num_examples/batch_size)
-                    batch_count = min(20,int(num_examples/batch_size))
-                    count = 0
+                    batch_count = 25
                     for i in range(batch_count):
                         # perform the operations we defined earlier on batch
                         print("A training iteration begins!")
-                        _, cost, summary, step = sess.run([train_op, cross_entropy, summary_op, global_step])
+                        _, summary, step = sess.run([train_op, summary_op, global_step])
                         print("A trainning iteration ends!")
-                        count += 1
                         elapsed_time = time.time() - start_time
                         start_time = time.time()
                         print("Step: %d," % (step+1),
-                              " Epoch: %2d," % (epoch+1),
                               " Batch: %3d of %3d," % (i+1, batch_count),
-                              " Cost: %.4f," % cost,
-                              " AvgTime: %3.2fms" % float(elapsed_time*1000/frequency))
+                              " AvgTime: %3.2fms" % float(elapsed_time*1000))
                         count = 0
-                        begin_time = time.time()
 
             print("done")
