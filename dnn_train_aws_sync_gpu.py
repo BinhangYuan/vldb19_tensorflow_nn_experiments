@@ -172,6 +172,5 @@ elif FLAGS.job_name == "worker":
                         print("Step: %d," % (step+1),
                               " Batch: %3d of %3d," % (i+1, batch_count),
                               " AvgTime: %3.2fms" % float(elapsed_time*1000))
-                        count = 0
 
             print("done")
