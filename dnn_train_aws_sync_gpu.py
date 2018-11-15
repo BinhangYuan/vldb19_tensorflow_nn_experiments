@@ -89,60 +89,51 @@ elif FLAGS.job_name == "worker":
         worker_device="/job:worker/task:%d" % FLAGS.task_index,
         cluster=cluster)):
 
-        global_step = tf.train.get_or_create_global_step()
-
         dataset = input_pipeline(['./wiki_data/Wikipedia_tf_60k.csv'], batch_size)
         iterator = dataset.make_one_shot_iterator()
         # input textfiles
-        with tf.name_scope('input'):
-            x , y_ = iterator.get_next()
+
+        x , y_ = iterator.get_next()
 
         # model parameters will change during training so we use tf.Variable
         tf.set_random_seed(1)
-        with tf.name_scope("weights"):
-            W1 = tf.get_variable("W1", [D1, D2], initializer=tf.random_normal_initializer())
-            W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer())
-            W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer())
 
-        # bias
-        with tf.name_scope("biases"):
-            b1 = tf.Variable(tf.zeros([D2]))
-            b2 = tf.Variable(tf.zeros([D3]))
-            b3 = tf.Variable(tf.zeros([C]))
+        W1 = tf.get_variable("W1", [D1, D2], initializer=tf.random_normal_initializer())
+        W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer())
+        W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer())
+        b1 = tf.Variable(tf.zeros([D2]))
+        b2 = tf.Variable(tf.zeros([D3]))
+        b3 = tf.Variable(tf.zeros([C]))
 
         # implement model
-        with tf.name_scope("softmax"):
-            # y is our prediction
-            z2 = tf.add(tf.matmul(x,W1),b1)
-            a2 = tf.nn.relu(z2)
-            z3 = tf.add(tf.matmul(a2,W2),b2)
-            a3 = tf.nn.relu(z3)
-            z4 = tf.add(tf.matmul(a3,W3),b3)
-            y  = tf.nn.log_softmax(z4)
+        z2 = tf.add(tf.matmul(x,W1),b1)
+        a2 = tf.nn.relu(z2)
+        z3 = tf.add(tf.matmul(a2,W2),b2)
+        a3 = tf.nn.relu(z3)
+        z4 = tf.add(tf.matmul(a3,W3),b3)
+        y  = tf.nn.log_softmax(z4)
 
-        # specify cost function
-        with tf.name_scope('cross_entropy'):
-            # this is our cost
-            cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * y, axis=[1]))
+        # this is our cost
+        cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * y, axis=[1]))
 
         # specify optimizer
-        with tf.name_scope('train'):
-            hooks = [tf.train.StopAtStepHook(last_step=1000000)]
+        hooks = [tf.train.StopAtStepHook(last_step=1000000)]
 
-            grad_op = tf.train.GradientDescentOptimizer(learning_rate)
+        global_step = tf.train.get_or_create_global_step()
 
-            rep_op = tf.train.SyncReplicasOptimizer(grad_op,
-                                                    replicas_to_aggregate=len(workers),
-                                                    total_num_replicas=len(workers),
-                                                    use_locking=True)
+        grad_op = tf.train.GradientDescentOptimizer(learning_rate)
 
-            hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0)))
+        rep_op = tf.train.SyncReplicasOptimizer(grad_op,
+                                                replicas_to_aggregate=len(workers),
+                                                total_num_replicas=len(workers),
+                                                use_locking=True)
 
-            train_op = rep_op.minimize(cross_entropy, global_step=global_step)
+        hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0)))
+
+        train_op = rep_op.minimize(cross_entropy, global_step=global_step)
 
 
         init_token_op = rep_op.get_init_tokens_op()
-        chief_queue_runner = rep_op.get_chief_queue_runner()
 
         # merge all summaries into a single "operation" which we can execute in a session
         saver = tf.train.Saver()
