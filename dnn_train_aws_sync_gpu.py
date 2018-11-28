@@ -79,8 +79,7 @@ def input_pipeline(filenames, batch_size, num_epochs=None):
 
 
 if FLAGS.job_name == "ps":
-    with tf.device('cpu:0'):
-        server.join()
+    server.join()
 elif FLAGS.job_name == "worker":
     # Between-graph replication
     with tf.device(tf.train.replica_device_setter(
