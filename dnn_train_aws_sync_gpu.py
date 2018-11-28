@@ -14,15 +14,13 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-import sys
 import time
-import subprocess
 
 # cluster specification
-parameter_servers = ["34.205.156.121:2222"] # this should be a CPU parameter server.
-workers = ["54.165.180.127:2223",
-           "18.234.78.218:2223",
-           "52.91.28.153:2223"
+parameter_servers = ["52.23.229.63:2222"] # this should be a CPU parameter server.
+workers = ["52.91.188.53:2223",
+           "34.230.43.226:2223",
+           "18.212.195.138:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -81,9 +79,9 @@ def input_pipeline(filenames, batch_size, num_epochs=None):
 
 
 if FLAGS.job_name == "ps":
-    server.join()
+    with tf.device('cpu:0'):
+        server.join()
 elif FLAGS.job_name == "worker":
-
     # Between-graph replication
     with tf.device(tf.train.replica_device_setter(
         worker_device="/job:worker/task:%d" % FLAGS.task_index,

@@ -91,8 +91,6 @@ def wiki_dnn():
 
     train_op = rep_op.minimize(cross_entropy, global_step=global_step)
 
-    init_token_op = tf.global_variables_initializer()
-
     # merge all summaries into a single "operation" which we can execute in a session
     saver = tf.train.Saver()
     summary_op = tf.summary.merge_all()
