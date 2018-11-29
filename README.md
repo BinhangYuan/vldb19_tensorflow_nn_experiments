@@ -14,4 +14,4 @@ sudo mount /dev/nvme1n1 ~/my_space
 
 cd my_space/
 
-chmod 777 -R .
+sudo chmod 777 -R .

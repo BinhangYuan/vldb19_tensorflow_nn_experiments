@@ -17,10 +17,10 @@ import numpy as np
 import time
 
 # cluster specification
-parameter_servers = ["18.234.128.241:2222"] # this should be a CPU parameter server.
-workers = ["35.174.137.4:2223",
-           "18.212.184.98:2223",
-           "18.212.60.243:2223"
+parameter_servers = ["34.227.106.43:2222"] # this should be a CPU parameter server.
+workers = ["35.174.105.94:2223",
+           "54.152.49.253:2223",
+           "54.173.152.71:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -125,7 +125,7 @@ elif FLAGS.job_name == "worker":
                                                 total_num_replicas=len(workers),
                                                 use_locking=True)
 
-        hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0)))
+        hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0), num_tokens=0))
 
         train_op = rep_op.minimize(cross_entropy, global_step=global_step)
 
