@@ -4,10 +4,16 @@ Distributed Tensorflow 0.12.0 example of using data parallelism and share model 
 Change the hardcoded host urls below with your own hosts.
 Run like this:
 
-pc-01$ python dnn_train_aws_sync_gpu.py --job_name="ps" --task_index=0 --hidden_layer_size=10000
-pc-02$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=0 --hidden_layer_size=10000
-pc-03$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=1 --hidden_layer_size=10000
-pc-04$ python dnn_train_aws_sync_gpu.py --job_name="worker" --task_index=2 --hidden_layer_size=10000
+pc-01$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=0 --hidden_layer_size=10000
+pc-02$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=1 --hidden_layer_size=10000
+pc-03$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=2 --hidden_layer_size=10000
+pc-04$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=3 --hidden_layer_size=10000
+pc-05$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=4 --hidden_layer_size=10000
+pc-01$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=0 --hidden_layer_size=10000
+pc-02$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=1 --hidden_layer_size=10000
+pc-03$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=2 --hidden_layer_size=10000
+pc-04$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=3 --hidden_layer_size=10000
+pc-05$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=4 --hidden_layer_size=10000
 '''
 
 from __future__ import print_function
@@ -19,8 +25,8 @@ import time
 # cluster specification
 parameter_servers = ["52.203.215.237:2222",
                      "35.171.16.44:2222",
-                     "18.212.192.234:2222"
-                     "107.23.6.253:2222"
+                     "18.212.192.234:2222",
+                     "107.23.6.253:2222",
                      "54.166.111.143:2222"
                      ]
 workers = ["52.203.215.237:2223",
