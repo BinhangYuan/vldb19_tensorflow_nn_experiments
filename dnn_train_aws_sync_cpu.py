@@ -9,6 +9,8 @@ pc-02$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=1 --hidden_
 pc-03$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=2 --hidden_layer_size=10000
 pc-04$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=3 --hidden_layer_size=10000
 pc-05$ python dnn_train_aws_sync_cpu.py --job_name="ps" --task_index=4 --hidden_layer_size=10000
+
+
 pc-01$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=0 --hidden_layer_size=10000
 pc-02$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=1 --hidden_layer_size=10000
 pc-03$ python dnn_train_aws_sync_cpu.py --job_name="worker" --task_index=2 --hidden_layer_size=10000
@@ -23,27 +25,27 @@ import numpy as np
 import time
 
 # cluster specification
-parameter_servers = ["52.203.215.237:2222",
-                     "35.171.16.44:2222",
-                     "18.212.192.234:2222",
-                     "107.23.6.253:2222",
-                     "54.166.111.143:2222",
-                     "54.163.38.143:2222",
-                     "54.165.179.107:2222",
-                     "18.212.19.95:2222",
-                     "52.90.4.67:2222",
-                     "34.207.90.126:2222"
+parameter_servers = ["54.158.243.97:2222",
+                     "34.238.49.202:2222",
+                     "34.201.40.179:2222",
+                     "34.238.247.28:2222",
+                     "54.174.203.76:2222",
+                     "54.174.72.197:2222",
+                     "18.205.28.136:2222",
+                     "34.201.39.171:2222",
+                     "54.157.228.84:2222",
+                     "54.167.12.225:2222"
                      ]
-workers = ["52.203.215.237:2223",
-           "35.171.16.44:2223",
-           "18.212.192.234:2223",
-           "107.23.6.253:2223",
-           "54.166.111.143:2223",
-           "54.163.38.143:2223",
-           "54.165.179.107:2223",
-           "18.212.19.95:2223",
-           "52.90.4.67:2223",
-           "34.207.90.126:2223"
+workers = ["54.158.243.97:2223",
+           "34.238.49.202:2223",
+           "34.201.40.179:2223",
+           "34.238.247.28:2223",
+           "54.174.203.76:2223",
+           "54.174.72.197:2223",
+           "18.205.28.136:2223",
+           "34.201.39.171:2223",
+           "54.157.228.84:2223",
+           "54.167.12.225:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
