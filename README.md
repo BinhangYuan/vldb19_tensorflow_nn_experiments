@@ -18,6 +18,10 @@ cd my_space/
 
 sudo chmod 777 -R .
 
+git clone https://github.com/BinhangYuan/vldb19_tensorflow_nn_experiments.git
+
+source activate tensorflow_p36
+
 ##Set up Ganglia
 
 ####Install the master on one node:

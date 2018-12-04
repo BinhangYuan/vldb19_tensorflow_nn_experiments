@@ -33,8 +33,8 @@ parameter_servers = ["18.233.171.201:2222",
                      "52.91.14.221:2222",
                      "52.207.210.145:2222",
                      "35.173.122.200:2222",
-                     "34.239.119.142:2222",
-                     "18.212.199.33:2222"
+                     #"34.239.119.142:2222",
+                     #"18.212.199.33:2222"
                      #"54.167.165.145:2222",
                      #"54.144.0.51:2222",
                      #"18.205.107.55:2222",
@@ -54,8 +54,8 @@ workers = [#"18.233.171.201:2223",
            #"52.91.14.221:2223",
            #"52.207.210.145:2223",
            #"35.173.122.200:2223",
-           #"34.239.119.142:2223",
-           #"18.212.199.33:2223",
+           "34.239.119.142:2223",
+           "18.212.199.33:2223",
            "54.167.165.145:2223",
            "54.144.0.51:2223",
            "18.205.107.55:2223",
@@ -149,9 +149,9 @@ elif FLAGS.job_name == "worker":
                              partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
         W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer(),
                              partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
-        b1 = tf.Variable(tf.zeros([D2]))
-        b2 = tf.Variable(tf.zeros([D3]))
-        b3 = tf.Variable(tf.zeros([C]))
+        b1 = tf.get_variable("b1", initializer=tf.zeros([D2]))
+        b2 = tf.get_variable("b2", initializer=tf.zeros([D3]))
+        b3 = tf.get_variable("b3", initializer=tf.zeros([C]))
 
         # implement model
         z2 = tf.add(tf.matmul(x,W1),b1)
@@ -173,7 +173,7 @@ elif FLAGS.job_name == "worker":
         rep_op = tf.train.SyncReplicasOptimizer(grad_op,
                                                 replicas_to_aggregate=num_workers,
                                                 total_num_replicas=num_workers,
-                                                use_locking=False)
+                                                use_locking=True)
 
         stop_hook = tf.train.StopAtStepHook(last_step=100)
         sync_replicas_hook = rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0))
