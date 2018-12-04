@@ -171,7 +171,7 @@ elif FLAGS.job_name == "worker":
         grad_op = tf.train.GradientDescentOptimizer(learning_rate)
 
         rep_op = tf.train.SyncReplicasOptimizer(grad_op,
-                                                replicas_to_aggregate=num_workers,
+                                                replicas_to_aggregate=num_ps_replicas,
                                                 total_num_replicas=num_workers,
                                                 use_locking=True)
 
