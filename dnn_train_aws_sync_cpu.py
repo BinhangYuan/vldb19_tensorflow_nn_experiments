@@ -25,27 +25,27 @@ import numpy as np
 import time
 
 # cluster specification
-parameter_servers = ["52.91.240.33:2222",
-                     "54.173.187.139:2222",
-                     "54.89.255.175:2222",
-                     "34.203.190.175:2222",
-                     "54.224.243.180:2222",
-                     "54.197.66.121:2222",
-                     "54.161.218.27:2222",
-                     "54.82.251.151:2222",
-                     "54.197.6.218:2222",
-                     "18.234.163.185:2222"
+parameter_servers = ["18.233.171.201:2222",
+                     "34.201.127.102:2222",
+                     "54.224.236.121:2222",
+                     "18.204.203.26:2222",
+                     "52.90.32.205:2222",
+                     "52.91.14.221:2222",
+                     "52.207.210.145:2222",
+                     "35.173.122.200:2222",
+                     "34.239.119.142:2222",
+                     "18.212.199.33:2222"
                      ]
-workers = ["52.91.240.33:2223",
-           "54.173.187.139:2223",
-           "54.89.255.175:2223",
-           "34.203.190.175:2223",
-           "54.224.243.180:2223",
-           "54.197.66.121:2223",
-           "54.161.218.27:2223",
-           "54.82.251.151:2223",
-           "54.197.6.218:2223",
-           "18.234.163.185:2223"
+workers = ["18.233.171.201:2223",
+           "34.201.127.102:2223",
+           "54.224.236.121:2223",
+           "18.204.203.26:2223",
+           "52.90.32.205:2223",
+           "52.91.14.221:2223",
+           "52.207.210.145:2223",
+           "35.173.122.200:2223",
+           "34.239.119.142:2223",
+           "18.212.199.33:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -145,7 +145,6 @@ elif FLAGS.job_name == "worker":
         cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * y, axis=[1]))
 
         # specify optimizer
-        hooks = [tf.train.StopAtStepHook(last_step=1000000)]
 
         global_step = tf.train.get_or_create_global_step()
 
@@ -156,7 +155,9 @@ elif FLAGS.job_name == "worker":
                                                 total_num_replicas=num_workers,
                                                 use_locking=False)
 
-        hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0), num_tokens=0))
+        stop_hook = tf.train.StopAtStepHook(last_step=100)
+        sync_replicas_hook = rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0))
+        hooks = [sync_replicas_hook, stop_hook]
 
         train_op = rep_op.minimize(cross_entropy, global_step=global_step)
 
@@ -164,14 +165,15 @@ elif FLAGS.job_name == "worker":
         init_token_op = rep_op.get_init_tokens_op()
 
         # merge all summaries into a single "operation" which we can execute in a session
-        saver = tf.train.Saver()
-        summary_op = tf.summary.merge_all()
+        #saver = tf.train.Saver()
+        #summary_op = tf.summary.merge_all()
         init_op = tf.global_variables_initializer()
         print("Model initialized ...")
 
         with tf.train.MonitoredTrainingSession(master=server.target,
                             is_chief=(FLAGS.task_index == 0),
-                            scaffold=tf.train.Scaffold(init_op=init_op, summary_op=summary_op, saver=saver),
+                            #scaffold=tf.train.Scaffold(init_op=init_op, summary_op=summary_op, saver=saver),
+                            scaffold=tf.train.Scaffold(init_op=init_op),
                             hooks=hooks) as sess:
 
             while not sess.should_stop():
