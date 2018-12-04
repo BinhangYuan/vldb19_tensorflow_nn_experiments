@@ -124,7 +124,7 @@ elif FLAGS.job_name == "worker":
         #W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer(), partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
         #W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer(), partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
         W1 = tf.get_variable("W1", [D1, D2], initializer=tf.random_normal_initializer(),
-                             partitioner=tf.fixed_size_partitioner(num_shards= num_ps_replicas))
+                             partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
         W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer(),
                              partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
         W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer(),
@@ -153,8 +153,8 @@ elif FLAGS.job_name == "worker":
 
         rep_op = tf.train.SyncReplicasOptimizer(grad_op,
                                                 replicas_to_aggregate=num_workers,
-                                                total_num_replicas=len(workers),
-                                                use_locking=True)
+                                                total_num_replicas=num_workers,
+                                                use_locking=False)
 
         hooks.append(rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0), num_tokens=0))
 
