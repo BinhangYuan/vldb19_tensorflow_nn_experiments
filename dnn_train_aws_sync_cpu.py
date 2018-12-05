@@ -173,7 +173,7 @@ elif FLAGS.job_name == "worker":
         rep_op = tf.train.SyncReplicasOptimizer(grad_op,
                                                 replicas_to_aggregate=num_non_drop_workers,
                                                 total_num_replicas=num_workers,
-                                                use_locking=True)
+                                                use_locking=False)
 
         stop_hook = tf.train.StopAtStepHook(last_step=100)
         sync_replicas_hook = rep_op.make_session_run_hook(is_chief=(FLAGS.task_index == 0))
