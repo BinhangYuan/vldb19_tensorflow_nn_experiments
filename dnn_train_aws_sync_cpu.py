@@ -81,10 +81,8 @@ server = tf.train.Server(cluster,job_name=FLAGS.job_name,task_index=FLAGS.task_i
 
 # config
 num_examples = 4856383
-batch_size = 10000//len(workers)
 learning_rate = 0.00000001
 training_epochs = 1
-evaluation_batch_size = 100
 logs_path = "/tmp/ffnn/1"
 # D1 is number of input features
 D1 = 60000
@@ -93,6 +91,8 @@ D3 = D2
 C = 17
 num_ps_replicas = len(parameter_servers)
 num_workers = len(workers)
+num_non_drop_workers = num_workers if num_workers <= 10 else (num_workers -2)
+batch_size = 10000//len(num_non_drop_workers)
 
 
 def preprocess_wiki(line):
@@ -171,7 +171,7 @@ elif FLAGS.job_name == "worker":
         grad_op = tf.train.GradientDescentOptimizer(learning_rate)
 
         rep_op = tf.train.SyncReplicasOptimizer(grad_op,
-                                                replicas_to_aggregate=num_ps_replicas,
+                                                replicas_to_aggregate=num_non_drop_workers,
                                                 total_num_replicas=num_workers,
                                                 use_locking=True)
 
