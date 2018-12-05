@@ -91,7 +91,7 @@ D3 = D2
 C = 17
 num_ps_replicas = len(parameter_servers)
 num_workers = len(workers)
-num_non_drop_workers = num_workers if num_workers <= 10 else (num_workers -2)
+num_non_drop_workers = num_workers if num_workers <= 10 else (num_workers -4)
 batch_size = 10000//num_non_drop_workers
 
 
@@ -188,7 +188,7 @@ elif FLAGS.job_name == "worker":
         #saver = tf.train.Saver()
         #summary_op = tf.summary.merge_all()
         init_op = tf.global_variables_initializer()
-        print("Model initialized ...")
+        print("Model initialized ... batch size:("+str(batch_size)+")." )
 
         with tf.train.MonitoredTrainingSession(master=server.target,
                             is_chief=(FLAGS.task_index == 0),
