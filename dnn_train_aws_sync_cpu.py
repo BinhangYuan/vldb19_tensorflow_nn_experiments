@@ -92,7 +92,7 @@ C = 17
 num_ps_replicas = len(parameter_servers)
 num_workers = len(workers)
 num_non_drop_workers = num_workers if num_workers <= 10 else (num_workers -2)
-batch_size = 10000//len(num_non_drop_workers)
+batch_size = 10000//num_non_drop_workers
 
 
 def preprocess_wiki(line):
