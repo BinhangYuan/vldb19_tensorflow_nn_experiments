@@ -107,11 +107,11 @@ elif FLAGS.job_name == "worker":
         #W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer(), partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
         #W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer(), partitioner=tf.min_max_variable_partitioner(max_partitions=10*num_ps_replicas))
         W1 = tf.get_variable("W1", [D1, D2], initializer=tf.random_normal_initializer(),
-                             partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
+                             partitioner=tf.fixed_size_partitioner(num_shards=10*num_ps_replicas))
         W2 = tf.get_variable("W2", [D2, D3], initializer=tf.random_normal_initializer(),
-                             partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
+                             partitioner=tf.fixed_size_partitioner(num_shards=10*num_ps_replicas))
         W3 = tf.get_variable("W3", [D3, C], initializer=tf.random_normal_initializer(),
-                             partitioner=tf.fixed_size_partitioner(num_shards=num_ps_replicas))
+                             partitioner=tf.fixed_size_partitioner(num_shards=10*num_ps_replicas))
         b1 = tf.get_variable("b1", initializer=tf.zeros([D2]))
         b2 = tf.get_variable("b2", initializer=tf.zeros([D3]))
         b3 = tf.get_variable("b3", initializer=tf.zeros([C]))
