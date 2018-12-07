@@ -9,7 +9,7 @@ import time
 tf.app.flags.DEFINE_string("job_name", "", "Either 'ps' or 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 tf.app.flags.DEFINE_boolean("sparse_input", False, "Whether we handle sparse input specially")
-tf.app.flags.DEFINE_integer("hidden_layer_size", 10000, "The size of the middle hidden layer")
+tf.app.flags.DEFINE_integer("hidden_layer_size", 20000, "The size of the middle hidden layer")
 FLAGS = tf.app.flags.FLAGS
 
 # config
