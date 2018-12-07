@@ -28,7 +28,7 @@ sudo mkfs.ext3 /dev/nvme0n1
 sudo mount /dev/nvme0n1 ~
 sudo apt-get update
 sudo apt install python-pip -y
-sudo pip install tensorflow==0.12.0
+sudo pip install tensorflow==1.0.0
 cd ~
 sudo chmod 777 -R .
 git clone https://github.com/BinhangYuan/vldb19_tensorflow_nn_experiments.git
