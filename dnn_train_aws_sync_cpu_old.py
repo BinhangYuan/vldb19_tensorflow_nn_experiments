@@ -158,9 +158,9 @@ elif FLAGS.job_name == "worker":
         # input images
         with tf.name_scope('input'):
             if FLAGS.sparse_input:
-                x, y_ = sparse_input_pipeline(['../wiki_data/Wikipedia_60k.tfrecords'], batch_size)
+                x, y_ = sparse_input_pipeline(['./wiki_data/Wikipedia_60k.tfrecords'], batch_size)
             else:
-                x, y_ = input_pipeline(['../wiki_data/Wikipedia_tf_60k.csv'], batch_size)
+                x, y_ = input_pipeline(['./wiki_data/Wikipedia_tf_60k.csv'], batch_size)
             if FLAGS.sparse_input:
                 eval_x = tf.sparse_placeholder(tf.float32)
                 eval_y_ = tf.placeholder(tf.int32, shape=[], name="eval_y_")
