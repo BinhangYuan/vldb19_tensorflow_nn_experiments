@@ -144,7 +144,7 @@ def sparse_input_pipeline(filenames, batch_size, num_epochs=None):
 if FLAGS.job_name == "ps":
     server.join()
 elif FLAGS.job_name == "worker":
-
+    print(tf.__version__)
     # Between-graph replication
     with tf.device(tf.train.replica_device_setter(
         worker_device="/job:worker/task:%d" % FLAGS.task_index,
