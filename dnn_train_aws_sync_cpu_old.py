@@ -4,10 +4,9 @@ Distributed Tensorflow 0.12.0 example of using data parallelism and share model 
 Change the hardcoded host urls below with your own hosts.
 Run like this:
 
-pc-01$ python example.py --job_name="ps" --task_index=0
-pc-02$ python example.py --job_name="worker" --task_index=0
-pc-03$ python example.py --job_name="worker" --task_index=1
-pc-04$ python example.py --job_name="worker" --task_index=2
+pc-01$ python dnn_train_aws_sync_cpu_old.py --job_name="ps" --task_index=0 --hidden_layer_size=10000
+pc-02$ python dnn_train_aws_sync_cpu_old.py --job_name="worker" --task_index=0 --hidden_layer_size=10000
+
 '''
 
 from __future__ import print_function
@@ -18,7 +17,7 @@ import sys
 import time
 import subprocess
 
-# cluster specification
+# cluster specification, in AWS use the private IP!
 parameter_servers = ["172.30.4.173:2222",
                      "172.30.4.220:2222",
                      "172.30.4.197:2222",
@@ -37,7 +36,7 @@ cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 tf.app.flags.DEFINE_string("job_name", "", "Either 'ps' or 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 tf.app.flags.DEFINE_boolean("sparse_input", False, "Whether we handle sparse input specially")
-tf.app.flags.DEFINE_integer("hidden_layer_size", 160000, "The size of the middle hidden layer")
+tf.app.flags.DEFINE_integer("hidden_layer_size", 10000, "The size of the middle hidden layer")
 FLAGS = tf.app.flags.FLAGS
 
 # start a server for a specific task
