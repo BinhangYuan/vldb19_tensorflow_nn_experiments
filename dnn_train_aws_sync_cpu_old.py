@@ -18,17 +18,39 @@ import time
 import subprocess
 
 # cluster specification, in AWS use the private IP!
-parameter_servers = ["172.30.4.173:2222",
-                     "172.30.4.220:2222",
-                     "172.30.4.197:2222",
-                     "172.30.4.55:2222",
-                     "172.30.4.76:2222"
+parameter_servers = [#"172.30.4.173:2222",
+                     #"172.30.4.220:2222",
+                     #"172.30.4.197:2222",
+                     #"172.30.4.55:2222",
+                     #"172.30.4.76:2222",
+
+                     "172.30.4.158:2222",
+                     "172.30.4.216:2222",
+                     "172.30.4.69:2222",
+                     "172.30.4.157:2222",
+                     "172.30.4.254:2222",
+                     "172.30.4.75:2222",
+                     "172.30.4.209:2222",
+                     "172.30.4.221:2222",
+                     "172.30.4.131:2222",
+                     "172.30.4.85:2222"
                      ]
-workers = ["172.30.4.173:2223",
-           "172.30.4.220:2223",
-           "172.30.4.197:2223",
-           "172.30.4.55:2223",
-           "172.30.4.76:2223"
+workers = [#"172.30.4.173:2223",
+           #"172.30.4.220:2223",
+           #"172.30.4.197:2223",
+           #"172.30.4.55:2223",
+           #"172.30.4.76:2223",
+
+           "172.30.4.158:2223",
+           "172.30.4.216:2223",
+           "172.30.4.69:2223",
+           "172.30.4.157:2223",
+           "172.30.4.254:2223",
+           "172.30.4.75:2223",
+           "172.30.4.209:2223",
+           "172.30.4.221:2223",
+           "172.30.4.131:2223",
+           "172.30.4.85:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -144,7 +166,7 @@ def sparse_input_pipeline(filenames, batch_size, num_epochs=None):
 if FLAGS.job_name == "ps":
     server.join()
 elif FLAGS.job_name == "worker":
-    print(tf.__version__)
+    print(tf.__version__) # this code should run on Tensorflow 1.0.0
     # Between-graph replication
     with tf.device(tf.train.replica_device_setter(
         worker_device="/job:worker/task:%d" % FLAGS.task_index,
