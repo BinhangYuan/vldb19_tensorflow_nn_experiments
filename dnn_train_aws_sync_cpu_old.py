@@ -20,8 +20,8 @@ import subprocess
 # cluster specification, in AWS use the private IP!
 parameter_servers = ["172.30.4.156:2222",
                      "172.30.4.210:2222",
-                     "172.30.4.84:2222",
-                     "172.30.4.206:2222"
+                     "172.30.4.84:2222"
+                     #"172.30.4.206:2222"
                      ]
 workers = ["172.30.4.165:2223",
            "172.30.4.30:2223",
