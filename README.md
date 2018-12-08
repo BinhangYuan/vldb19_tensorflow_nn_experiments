@@ -34,6 +34,9 @@ sudo chmod 777 -R .
 git clone https://github.com/BinhangYuan/vldb19_tensorflow_nn_experiments.git
 
 
+sudo pip install tensorflow-gpu==1.0.0
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64:/usr/local/cuda-8.0/extras/CUPTI/lib64:/lib/nccl/cuda-8"
+
 ##Set up Ganglia
 
 ####Install the master on one node:
