@@ -18,9 +18,11 @@ import time
 import subprocess
 
 # cluster specification, in AWS use the private IP!
-parameter_servers = ["172.30.4.156:2222"
+parameter_servers = ["172.30.4.156:2222",
+                     "172.30.4.210:2222"
                      ]
-workers = ["172.30.4.165:2223"
+workers = ["172.30.4.165:2223",
+           "172.30.4.30:2223"
            ] # these should be GPU workers.
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
