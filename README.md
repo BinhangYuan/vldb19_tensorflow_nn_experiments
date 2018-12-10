@@ -20,22 +20,25 @@ sudo chmod 777 -R .
 
 git clone https://github.com/BinhangYuan/vldb19_tensorflow_nn_experiments.git
 
-source activate tensorflow_p36
+source activate tensorflow_p36 (For Deep learning AMI)
 
 or 
 
 sudo mkfs.ext3 /dev/nvme0n1
-sudo mount /dev/nvme0n1 ~
-sudo apt-get update
-sudo apt install python-pip -y
-sudo pip install tensorflow==1.0.0
-cd ~
-sudo chmod 777 -R .
-git clone https://github.com/BinhangYuan/vldb19_tensorflow_nn_experiments.git
 
+sudo mount /dev/nvme0n1 ~
+
+sudo apt-get update
+
+sudo apt install python-pip -y
+
+sudo pip install tensorflow==1.0.0
+
+for gpu benchmark, install gpu version of tensorflow. 
 
 sudo pip install tensorflow-gpu==1.0.0
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64:/usr/local/cuda-8.0/extras/CUPTI/lib64:/lib/nccl/cuda-8"
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64:/usr/local/cuda-8.0/extras/CUPTI/lib64:/lib/nccl/cuda-8" (For Deep learning base AMI)
 
 ##Set up Ganglia
 
